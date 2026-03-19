@@ -1,0 +1,15 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: inventory-service
+  r2dbc:
+    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://localhost:5433/inventory_db}
+    username: ${SPRING_R2DBC_USERNAME:inv_admin}
+    password: ${SPRING_R2DBC_PASSWORD:password123}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql

@@ -3,6 +3,8 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
+# Dar permisos de ejecución
+RUN chmod +x mvnw
 COPY api-gateway/pom.xml api-gateway/
 COPY users-service/pom.xml users-service/
 COPY inventory-service/pom.xml inventory-service/

@@ -166,41 +166,13 @@
               "raw": "{\n  \"username\": \"{{user_username}}\",\n  \"password\": \"{{user_password}}\",\n  \"role\": \"USER\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/users",
+              "raw": "{{baseUrl}}/auth/register",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Created User",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{admin_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{user_id}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{user_id}}"
+                "auth",
+                "register"
               ]
             }
           }
@@ -431,13 +403,13 @@
               "raw": "{\n  \"username\": \"bloqueado\",\n  \"password\": \"bloqueado123\",\n  \"role\": \"USER\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/users",
+              "raw": "{{baseUrl}}/auth/register",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "api",
-                "users"
+                "auth",
+                "register"
               ]
             }
           }

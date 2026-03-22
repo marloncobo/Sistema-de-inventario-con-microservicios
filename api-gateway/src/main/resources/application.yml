@@ -8,30 +8,54 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          uri: ${USERS_SERVICE_URL:http://localhost:8081}
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/auth/**
-        - id: users-service
-          uri: ${USERS_SERVICE_URL:http://localhost:8081}
+        - id: catalog-read-service
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/users/**
+            - Path=/api/catalog/**
+            - Method=GET
+          filters:
+            - JwtAuthFilter
+            - RoleAuthFilter=ADMIN,USER
+        - id: catalog-write-service
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/catalog/**
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN
         - id: inventory-read-service
-          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
           predicates:
-            - Path=/api/categories/**, /api/products/**, /api/reports/**
+            - Path=/api/reports/**
+            - Method=GET
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN,USER
         - id: inventory-write-service
-          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/inventory/**
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN
+        - id: sales-read-service
+          uri: ${SALES_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/sales/**
+            - Method=GET
+          filters:
+            - JwtAuthFilter
+            - RoleAuthFilter=ADMIN,USER
+        - id: sales-write-service
+          uri: ${SALES_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/sales/**
+          filters:
+            - JwtAuthFilter
+            - RoleAuthFilter=ADMIN,USER
 
 jwt:
   secret: ${JWT_SECRET:MiSuperSecretoJWTKey1234567890MiSuperSecretoJWTKey1234567890!}

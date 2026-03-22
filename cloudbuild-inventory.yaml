@@ -17,7 +17,7 @@ steps:
       - '$_REGION'
       - '--platform'
       - 'managed'
-      - '--no-allow-unauthenticated' # Bloquea acceso público
+      - '--allow-unauthenticated'
       - '--network'
       - 'default'
       - '--set-env-vars'

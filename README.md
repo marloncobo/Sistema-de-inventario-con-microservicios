@@ -1,57 +1,69 @@
-# Sistema de Inventario basado en Microservicios
+# Inventory Store Microservices
 
-Backend reactivo con Spring Boot, Spring Cloud Gateway, WebFlux, R2DBC y PostgreSQL.
+Backend reactivo con Spring Boot, Spring Cloud Gateway, WebFlux, R2DBC y PostgreSQL para una tienda con autenticacion, catalogo, stock y ventas.
 
-## Estructura actual
+## Arquitectura
 
-- `api-gateway`: unico punto de entrada. Valida JWT y reenvia peticiones a los demas servicios.
-- `users-service`: autenticacion y gestion basica de usuarios.
-- `inventory-service`: categorias, productos, movimientos y reporte de movimientos.
+- `api-gateway`: entrada unica del sistema, valida JWT y enruta peticiones.
+- `auth-service`: login y registro de usuarios.
+- `catalog-service`: categorias y productos del catalogo.
+- `inventory-service`: stock y movimientos de inventario.
+- `sales-service`: ordenes de venta.
 
-Cada modulo tiene una sola implementacion activa. Se eliminaron clases duplicadas, paquetes viejos y una app raiz que ya no tenia funcion.
+Puertos locales:
 
-## Stack
+- `api-gateway`: `8080`
+- `auth-service`: `8081`
+- `catalog-service`: `8082`
+- `inventory-service`: `8083`
+- `sales-service`: `8086`
 
-- Java 21
-- Spring Boot 3.2.4
-- Spring Cloud Gateway
-- Spring WebFlux
-- Spring Data R2DBC
-- PostgreSQL
-- Docker Compose
+## Levantar localmente
 
-## Levantar con Docker
-
-1. Compila los jars:
+1. Compilar:
 
 ```powershell
 .\mvnw.cmd clean package
 ```
 
-2. Construye y levanta los contenedores:
+2. Levantar todo:
 
 ```powershell
 docker compose up --build
 ```
 
-Servicios expuestos:
+Bases de datos expuestas:
 
-- `api-gateway`: `http://localhost:8080`
-- `users-db`: `localhost:5432`
-- `inventory-db`: `localhost:5433`
+- `auth-db`: `localhost:5432`
+- `catalog-db`: `localhost:5433`
+- `inventory-db`: `localhost:5434`
+- `sales-db`: `localhost:5437`
 
 Usuario inicial:
 
 - `username`: `admin`
 - `password`: `admin123`
 
-## Flujo recomendado de pruebas en Postman
+## Endpoints via gateway
 
-Usa siempre el gateway en `http://localhost:8080`.
+Todos se consumen desde `http://localhost:8080`.
 
-### 1. Login
+Publico:
 
-`POST /auth/login`
+- `POST /auth/login`
+- `POST /auth/register`
+
+Protegidos:
+
+- `GET|POST /api/catalog/categories`
+- `GET|POST /api/catalog/products`
+- `POST /api/inventory/movements`
+- `GET /api/reports/movements`
+- `GET|POST /api/sales/orders`
+
+## Flujo rapido de prueba
+
+1. Login:
 
 ```json
 {
@@ -60,112 +72,84 @@ Usa siempre el gateway en `http://localhost:8080`.
 }
 ```
 
-Respuesta esperada:
+2. Crear categoria:
 
 ```json
 {
-  "token": "..."
+  "name": "Office",
+  "description": "Office supplies"
 }
 ```
 
-Guarda ese valor en una variable de coleccion, por ejemplo `token`.
-
-### 2. Crear usuario
-
-`POST /api/users`
-
-Header:
-
-- `Authorization: Bearer {{token}}`
-
-Body:
+3. Crear producto de catalogo:
 
 ```json
 {
-  "username": "operario",
-  "password": "operario123",
-  "role": "USER"
+  "sku": "SKU-CHA-010",
+  "name": "Office Chair",
+  "description": "Ergonomic chair",
+  "categoryId": "UUID_DE_CATEGORIA",
+  "unitPrice": 450.00,
+  "reorderLevel": 6
 }
 ```
 
-Respuesta esperada: usuario creado con `id`.
-
-### 3. Consultar categorias
-
-`GET /api/categories`
-
-Header:
-
-- `Authorization: Bearer {{token}}`
-
-### 4. Consultar productos
-
-`GET /api/products`
-
-Header:
-
-- `Authorization: Bearer {{token}}`
-
-Toma el `id` del producto `Laptop` para las siguientes pruebas.
-
-### 5. Registrar entrada de inventario
-
-`POST /api/inventory/movements`
-
-Header:
-
-- `Authorization: Bearer {{token}}`
-
-Body:
+4. Registrar movimiento de inventario:
 
 ```json
 {
-  "productId": "UUID_DEL_PRODUCTO",
+  "productId": "UUID_DEL_PRODUCTO_STOCK",
   "type": "ENTRY",
   "quantity": 10
 }
 ```
 
-### 6. Registrar salida de inventario
-
-`POST /api/inventory/movements`
-
-Header:
-
-- `Authorization: Bearer {{token}}`
-
-Body:
+5. Crear orden de venta:
 
 ```json
 {
-  "productId": "UUID_DEL_PRODUCTO",
-  "type": "EXIT",
-  "quantity": 5
+  "reference": "SO-9001",
+  "salesChannel": "STORE",
+  "totalAmount": 1290.00
 }
 ```
 
-### 7. Ver reporte de movimientos
+## Despliegue en Google Cloud
 
-`GET /api/reports/movements`
+Cada servicio tiene su pipeline de Cloud Build:
 
-Header:
+- `cloudbuild-auth.yaml`
+- `cloudbuild-catalog.yaml`
+- `cloudbuild-inventory.yaml`
+- `cloudbuild-sales.yaml`
+- `cloudbuild-gateway.yaml`
 
-- `Authorization: Bearer {{token}}`
+Orden recomendado:
 
-## Sugerencias para Postman
+1. Desplegar servicios backend.
+2. Guardar las URLs resultantes de Cloud Run.
+3. Desplegar `api-gateway` pasando las URLs con sustituciones.
 
-- Crea una variable `baseUrl` con valor `http://localhost:8080`.
-- Crea una variable `token`.
-- En las peticiones protegidas usa `Authorization: Bearer {{token}}`.
-- En el script del login puedes guardar el token automaticamente:
+Sustituciones necesarias del gateway:
 
-```javascript
-const json = pm.response.json();
-pm.collectionVariables.set("token", json.token);
-```
+- `_AUTH_URL`
+- `_CATALOG_URL`
+- `_INVENTORY_URL`
+- `_SALES_URL`
+- `_JWT_SECRET`
+- `_REGION`
+- `_REPO_NAME`
+
+Sustituciones necesarias para cada microservicio con base de datos:
+
+- `_REGION`
+- `_REPO_NAME`
+- `_DB_IP`
+- `_DB_USER`
+- `_DB_PASS`
 
 ## Notas
 
-- `users-service` y `inventory-service` cargan `schema.sql` y `data.sql` al iniciar.
+- Cada microservicio carga su propio `schema.sql` y `data.sql`.
 - El gateway agrega `X-User-Id` y `X-User-Role` a las peticiones autenticadas.
-- Se agregaron pruebas unitarias base para `AuthService` e `InventoryService`.
+- Para que el gateway pueda comunicarse con Cloud Run sin agregar IAM invoker en esta iteracion, los microservicios quedaron desplegados como accesibles por URL.

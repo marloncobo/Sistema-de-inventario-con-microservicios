@@ -16,8 +16,10 @@
 
 	<modules>
 		<module>api-gateway</module>
-		<module>users-service</module>
+		<module>auth-service</module>
 		<module>inventory-service</module>
+		<module>catalog-service</module>
+		<module>sales-service</module>
 	</modules>
 
 	<properties>

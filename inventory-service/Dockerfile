@@ -6,8 +6,10 @@ COPY pom.xml .
 # Dar permisos de ejecución
 RUN chmod +x mvnw
 COPY api-gateway/pom.xml api-gateway/
-COPY users-service/pom.xml users-service/
+COPY auth-service/pom.xml auth-service/
 COPY inventory-service/pom.xml inventory-service/
+COPY catalog-service/pom.xml catalog-service/
+COPY sales-service/pom.xml sales-service/
 
 RUN ./mvnw -B dependency:go-offline
 

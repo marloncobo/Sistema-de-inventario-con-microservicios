@@ -21,4 +21,4 @@ steps:
       - '--network'
       - 'default'
       - '--set-env-vars'
-      - '^@^SPRING_R2DBC_URL=r2dbc:postgresql://$_DB_IP:5432/sales_db@SPRING_R2DBC_USERNAME=$_DB_USER@SPRING_R2DBC_PASSWORD=$_DB_PASS'
+      - 'SPRING_R2DBC_URL=r2dbc:postgresql://$_DB_IP:5432/sales_db,SPRING_R2DBC_USERNAME=$_DB_USER,SPRING_R2DBC_PASSWORD=$_DB_PASS'

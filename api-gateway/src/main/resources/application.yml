@@ -6,6 +6,22 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "https://sistema-de-inventario-2e3c2.web.app"
+              - "https://sistema-de-inventario-2e3c2.firebaseapp.com"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
@@ -15,7 +31,6 @@ spring:
           uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/catalog/**
-            - Method=GET
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN,USER
@@ -30,7 +45,6 @@ spring:
           uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/reports/**
-            - Method=GET
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN,USER
@@ -45,7 +59,6 @@ spring:
           uri: ${SALES_SERVICE_URL:http://localhost:8086}
           predicates:
             - Path=/api/sales/**
-            - Method=GET
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN,USER

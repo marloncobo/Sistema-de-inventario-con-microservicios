@@ -2,6 +2,7 @@ package com.microservices.gateway.filter;
 
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,10 @@ public class RoleAuthFilter extends AbstractGatewayFilterFactory<RoleAuthFilter.
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
+            if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+                return chain.filter(exchange);
+            }
+
             String role = exchange.getRequest().getHeaders().getFirst(USER_ROLE_HEADER);
             if (role == null || config.roles.isEmpty() || !config.roles.contains(role)) {
                 exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);

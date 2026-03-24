@@ -1,18 +1,20 @@
-package com.microservices.inventory.application.dto;
+package com.microservices.sales.application.dto;
 
-import com.microservices.inventory.domain.MovementType;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.util.UUID;
 
-public class MovementRequest {
-    @NotNull
+public class InventoryMovementRequest {
     private UUID productId;
-    @NotNull
-    private MovementType type;
-    @NotNull
-    @Positive
+    private String type;
     private Integer quantity;
+
+    public InventoryMovementRequest() {
+    }
+
+    public InventoryMovementRequest(UUID productId, String type, Integer quantity) {
+        this.productId = productId;
+        this.type = type;
+        this.quantity = quantity;
+    }
 
     public UUID getProductId() {
         return productId;
@@ -22,11 +24,11 @@ public class MovementRequest {
         this.productId = productId;
     }
 
-    public MovementType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(MovementType type) {
+    public void setType(String type) {
         this.type = type;
     }
 

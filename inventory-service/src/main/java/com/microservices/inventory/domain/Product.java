@@ -1,19 +1,11 @@
 package com.microservices.inventory.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Table("products")
 public class Product implements Persistable<UUID> {
     @Id
@@ -21,6 +13,11 @@ public class Product implements Persistable<UUID> {
     private String name;
     private UUID categoryId;
     private Integer currentStock;
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
 
     @Override
     public boolean isNew() {

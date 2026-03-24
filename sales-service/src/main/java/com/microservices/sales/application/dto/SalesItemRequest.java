@@ -1,18 +1,20 @@
-package com.microservices.inventory.application.dto;
+package com.microservices.sales.application.dto;
 
-import com.microservices.inventory.domain.MovementType;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
 import java.util.UUID;
 
-public class MovementRequest {
+public class SalesItemRequest {
     @NotNull
     private UUID productId;
     @NotNull
-    private MovementType type;
-    @NotNull
     @Positive
     private Integer quantity;
+    @NotNull
+    @DecimalMin("0.0")
+    private BigDecimal price;
 
     public UUID getProductId() {
         return productId;
@@ -22,19 +24,19 @@ public class MovementRequest {
         this.productId = productId;
     }
 
-    public MovementType getType() {
-        return type;
-    }
-
-    public void setType(MovementType type) {
-        this.type = type;
-    }
-
     public Integer getQuantity() {
         return quantity;
     }
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

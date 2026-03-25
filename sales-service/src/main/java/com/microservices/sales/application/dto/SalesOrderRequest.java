@@ -1,5 +1,6 @@
 package com.microservices.sales.application.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotBlank;
@@ -16,7 +17,7 @@ public class SalesOrderRequest {
     @DecimalMin("0.0")
     private BigDecimal totalAmount;
     @NotEmpty
-    private List<@NotNull SalesItemRequest> items;
+    private List<@NotNull @Valid SalesItemRequest> items;
 
     public String getReference() {
         return reference;

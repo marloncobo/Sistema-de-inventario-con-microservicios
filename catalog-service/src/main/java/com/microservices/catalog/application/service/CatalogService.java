@@ -23,10 +23,10 @@ public class CatalogService {
     }
 
     public Mono<Category> createCategory(CategoryRequest request) {
-        return categoryRepository.save(Category.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .build());
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        return categoryRepository.save(category);
     }
 
     public Flux<CatalogProduct> getProducts() {
@@ -34,14 +34,14 @@ public class CatalogService {
     }
 
     public Mono<CatalogProduct> createProduct(ProductRequest request) {
-        return productRepository.save(CatalogProduct.builder()
-                .sku(request.getSku())
-                .name(request.getName())
-                .description(request.getDescription())
-                .categoryId(request.getCategoryId())
-                .unitPrice(request.getUnitPrice())
-                .reorderLevel(request.getReorderLevel())
-                .active(Boolean.TRUE)
-                .build());
+        CatalogProduct product = new CatalogProduct();
+        product.setSku(request.getSku());
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setCategoryId(request.getCategoryId());
+        product.setUnitPrice(request.getUnitPrice());
+        product.setReorderLevel(request.getReorderLevel());
+        product.setActive(Boolean.TRUE);
+        return productRepository.save(product);
     }
 }

@@ -128,6 +128,7 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://sales-db:5432/sales_db
       - SPRING_R2DBC_USERNAME=sales_admin
       - SPRING_R2DBC_PASSWORD=password123
+      - INVENTORY_SERVICE_URL=http://inventory-service:8083
     depends_on:
       sales-db:
         condition: service_healthy

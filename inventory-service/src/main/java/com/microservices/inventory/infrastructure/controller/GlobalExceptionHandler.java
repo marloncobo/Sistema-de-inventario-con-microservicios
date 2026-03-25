@@ -1,21 +1,14 @@
-package com.microservices.sales.infrastructure.controller;
+package com.microservices.inventory.infrastructure.controller;
 
-import com.microservices.sales.application.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(BusinessException.class)
-    public ProblemDetail handleBusinessException(BusinessException exception) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
-        problemDetail.setTitle("Business error");
-        return problemDetail;
-    }
 
     @ExceptionHandler(WebExchangeBindException.class)
     public ProblemDetail handleValidationException(WebExchangeBindException exception) {
@@ -24,6 +17,13 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errors", exception.getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(ResponseStatusException exception) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(exception.getStatusCode(), exception.getReason());
+        problemDetail.setTitle("Inventory request failed");
         return problemDetail;
     }
 

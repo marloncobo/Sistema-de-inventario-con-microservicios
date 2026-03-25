@@ -6,6 +6,7 @@ import com.microservices.auth.domain.Role;
 import com.microservices.auth.domain.User;
 import com.microservices.auth.infrastructure.repository.UserRepository;
 import com.microservices.auth.infrastructure.security.JwtUtil;
+import org.mindrot.jbcrypt.BCrypt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,17 +35,18 @@ class AuthServiceTest {
 
     @Test
     void loginReturnsTokenWhenCredentialsAreValid() {
+        String rawPassword = "admin123";
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .username("admin")
-                .passwordHash("$2a$10$W2iXQJ.H/A438mIf0B5i7OfJm.T6zH.5iT.lD3lJ.GZz.kU.e1jFq")
+                .passwordHash(BCrypt.hashpw(rawPassword, BCrypt.gensalt()))
                 .role(Role.ADMIN)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         AuthRequest request = new AuthRequest();
         request.setUsername("admin");
-        request.setPassword("admin123");
+        request.setPassword(rawPassword);
 
         when(userRepository.findByUsername("admin")).thenReturn(Mono.just(user));
         when(jwtUtil.generateToken(any(User.class))).thenReturn("jwt-token");

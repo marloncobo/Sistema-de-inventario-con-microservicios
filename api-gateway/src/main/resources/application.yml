@@ -31,13 +31,19 @@ spring:
           uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/catalog/**
+            - Method=GET
           filters:
             - JwtAuthFilter
-            - RoleAuthFilter=ADMIN,USER
+            - name: RoleAuthFilter
+              args:
+                roles:
+                  - ADMIN
+                  - USER
         - id: catalog-write-service
           uri: ${CATALOG_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/catalog/**
+            - Method=POST,PUT,DELETE,PATCH
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN
@@ -47,28 +53,54 @@ spring:
             - Path=/api/reports/**
           filters:
             - JwtAuthFilter
-            - RoleAuthFilter=ADMIN,USER
+            - name: RoleAuthFilter
+              args:
+                roles:
+                  - ADMIN
+                  - USER
+        - id: inventory-products-read-service
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/products/**
+            - Method=GET
+          filters:
+            - JwtAuthFilter
+            - name: RoleAuthFilter
+              args:
+                roles:
+                  - ADMIN
+                  - USER
+        - id: inventory-categories-read-service
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/categories/**
+            - Method=GET
+          filters:
+            - JwtAuthFilter
+            - name: RoleAuthFilter
+              args:
+                roles:
+                  - ADMIN
+                  - USER
         - id: inventory-write-service
           uri: ${INVENTORY_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/inventory/**
+            - Method=POST,PUT,DELETE,PATCH
           filters:
             - JwtAuthFilter
             - RoleAuthFilter=ADMIN
-        - id: sales-read-service
+        - id: sales-service
           uri: ${SALES_SERVICE_URL:http://localhost:8086}
           predicates:
             - Path=/api/sales/**
           filters:
             - JwtAuthFilter
-            - RoleAuthFilter=ADMIN,USER
-        - id: sales-write-service
-          uri: ${SALES_SERVICE_URL:http://localhost:8086}
-          predicates:
-            - Path=/api/sales/**
-          filters:
-            - JwtAuthFilter
-            - RoleAuthFilter=ADMIN,USER
+            - name: RoleAuthFilter
+              args:
+                roles:
+                  - ADMIN
+                  - USER
 
 jwt:
   secret: ${JWT_SECRET:MiSuperSecretoJWTKey1234567890MiSuperSecretoJWTKey1234567890!}

@@ -1,4 +1,4 @@
-package com.microservices.sales.config;
+package com.microservices.catalog.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,12 +13,5 @@ public class WebClientConfig {
             WebClient.Builder builder,
             @Value("${clients.inventory.base-url:http://localhost:8083}") String inventoryBaseUrl) {
         return builder.baseUrl(inventoryBaseUrl).build();
-    }
-
-    @Bean
-    public WebClient catalogWebClient(
-            WebClient.Builder builder,
-            @Value("${clients.catalog.base-url:http://localhost:8082}") String catalogBaseUrl) {
-        return builder.baseUrl(catalogBaseUrl).build();
     }
 }

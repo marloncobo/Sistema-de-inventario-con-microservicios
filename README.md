@@ -53,6 +53,8 @@ Publico:
 - `POST /auth/login`
 - `POST /auth/register`
 
+El registro publico crea siempre usuarios con rol `USER`.
+
 Protegidos:
 
 - `GET|POST /api/catalog/categories`
@@ -110,9 +112,20 @@ Protegidos:
 {
   "reference": "SO-9001",
   "salesChannel": "STORE",
-  "totalAmount": 1290.00
+  "items": [
+    {
+      "productId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+      "quantity": 2
+    }
+  ]
 }
 ```
+
+Notas del flujo:
+
+- El precio unitario de la venta se toma desde `catalog-service`.
+- El total de la orden se calcula en `sales-service`.
+- Al crear categorias y productos en catalogo, tambien se sincronizan hacia `inventory-service`.
 
 ## Despliegue en Google Cloud
 

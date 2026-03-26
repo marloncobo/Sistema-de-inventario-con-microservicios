@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface InventoryMovementPort {
 
-    Mono<Void> registerOutputMovements(InventoryMovementBatchRequest request, UUID userId);
+    Mono<Void> registerMovements(InventoryMovementBatchRequest request, UUID userId);
 }

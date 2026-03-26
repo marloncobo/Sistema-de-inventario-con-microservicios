@@ -2,6 +2,7 @@ package com.microservices.auth.application.service;
 
 import com.microservices.auth.application.dto.UserRequest;
 import com.microservices.auth.application.dto.UserResponse;
+import com.microservices.auth.domain.Role;
 import com.microservices.auth.domain.User;
 import com.microservices.auth.infrastructure.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class RegistrationService {
                     User user = User.builder()
                             .username(request.getUsername())
                             .passwordHash(hashedPassword)
-                            .role(request.getRole())
+                            .role(Role.USER)
                             .createdAt(LocalDateTime.now())
                             .build();
 

@@ -1,12 +1,15 @@
 package com.microservices.sales.application.service;
 
+import com.microservices.sales.application.dto.CatalogProductResponse;
 import com.microservices.sales.application.dto.InventoryMovementBatchRequest;
 import com.microservices.sales.application.dto.InventoryMovementRequest;
+import com.microservices.sales.application.dto.ResolvedSalesItem;
 import com.microservices.sales.application.dto.SalesItemRequest;
 import com.microservices.sales.application.dto.SalesOrderItemResponse;
 import com.microservices.sales.application.dto.SalesOrderRequest;
 import com.microservices.sales.application.dto.SalesOrderResponse;
 import com.microservices.sales.application.exception.BusinessException;
+import com.microservices.sales.application.port.out.CatalogProductPort;
 import com.microservices.sales.application.port.out.InventoryMovementPort;
 import com.microservices.sales.domain.SalesOrder;
 import com.microservices.sales.domain.SalesOrderItem;
@@ -26,19 +29,20 @@ import java.util.UUID;
 @Service
 public class SalesOrderService {
 
-    private static final String ORDER_STATUS_PENDING = "PENDING_INVENTORY";
     private static final String ORDER_STATUS_CONFIRMED = "CONFIRMED";
-    private static final String ORDER_STATUS_REJECTED = "REJECTED";
 
     private final SalesOrderRepository salesOrderRepository;
     private final SalesOrderItemRepository salesOrderItemRepository;
+    private final CatalogProductPort catalogProductPort;
     private final InventoryMovementPort inventoryMovementPort;
 
     public SalesOrderService(SalesOrderRepository salesOrderRepository,
                              SalesOrderItemRepository salesOrderItemRepository,
+                             CatalogProductPort catalogProductPort,
                              InventoryMovementPort inventoryMovementPort) {
         this.salesOrderRepository = salesOrderRepository;
         this.salesOrderItemRepository = salesOrderItemRepository;
+        this.catalogProductPort = catalogProductPort;
         this.inventoryMovementPort = inventoryMovementPort;
     }
 
@@ -48,55 +52,61 @@ public class SalesOrderService {
 
     @Transactional
     public Mono<SalesOrderResponse> createOrder(SalesOrderRequest request, UUID userId) {
-        validateRequest(request);
-
-        SalesOrder salesOrder = new SalesOrder();
-        salesOrder.setReference(request.getReference());
-        salesOrder.setSalesChannel(request.getSalesChannel());
-        salesOrder.setStatus(ORDER_STATUS_PENDING);
-        salesOrder.setTotalAmount(request.getTotalAmount());
-        salesOrder.setCreatedAt(LocalDateTime.now());
-
-        return salesOrderRepository.save(salesOrder)
-                .flatMap(savedOrder -> saveItems(savedOrder.getId(), request.getItems())
-                        .collectList()
-                        .flatMap(savedItems -> registerInventoryOutput(request.getItems(), userId)
-                                .then(updateOrderStatus(savedOrder, ORDER_STATUS_CONFIRMED))
-                                .flatMap(confirmedOrder -> toResponse(confirmedOrder, savedItems))
-                                .onErrorResume(error -> updateOrderStatus(savedOrder, ORDER_STATUS_REJECTED)
+        return resolveItems(request.getItems())
+                .collectList()
+                .flatMap(resolvedItems -> registerInventoryMovements(resolvedItems, "EXIT", userId)
+                        .then(saveConfirmedOrder(request, resolvedItems)
+                                .onErrorResume(error -> registerInventoryMovements(resolvedItems, "ENTRY", userId)
+                                        .onErrorResume(compensationError -> Mono.empty())
                                         .then(Mono.error(error)))));
     }
 
-    private void validateRequest(SalesOrderRequest request) {
-        BigDecimal calculatedTotal = request.getItems().stream()
-                .map(this::calculateSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (calculatedTotal.compareTo(request.getTotalAmount()) != 0) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST,
-                    "The totalAmount does not match the sum of sales items");
-        }
+    private Flux<ResolvedSalesItem> resolveItems(List<SalesItemRequest> items) {
+        return Flux.fromIterable(items)
+                .flatMap(this::resolveItem);
     }
 
-    private Flux<SalesOrderItem> saveItems(UUID salesOrderId, List<SalesItemRequest> items) {
+    private Mono<ResolvedSalesItem> resolveItem(SalesItemRequest item) {
+        return catalogProductPort.getProductById(item.getProductId())
+                .flatMap(product -> toResolvedItem(item, product));
+    }
+
+    private Mono<ResolvedSalesItem> toResolvedItem(SalesItemRequest item, CatalogProductResponse product) {
+        if (Boolean.FALSE.equals(product.getActive())) {
+            return Mono.error(new BusinessException(HttpStatus.BAD_REQUEST,
+                    "Inactive products cannot be sold"));
+        }
+        return Mono.just(new ResolvedSalesItem(item.getProductId(), item.getQuantity(), product.getUnitPrice()));
+    }
+
+    private Mono<SalesOrderResponse> saveConfirmedOrder(SalesOrderRequest request, List<ResolvedSalesItem> items) {
+        SalesOrder salesOrder = new SalesOrder();
+        salesOrder.setReference(request.getReference());
+        salesOrder.setSalesChannel(request.getSalesChannel());
+        salesOrder.setStatus(ORDER_STATUS_CONFIRMED);
+        salesOrder.setTotalAmount(calculateTotal(items));
+        salesOrder.setCreatedAt(LocalDateTime.now());
+
+        return salesOrderRepository.save(salesOrder)
+                .flatMap(savedOrder -> saveItems(savedOrder.getId(), items)
+                        .collectList()
+                        .flatMap(savedItems -> toResponse(savedOrder, savedItems)));
+    }
+
+    private Flux<SalesOrderItem> saveItems(UUID salesOrderId, List<ResolvedSalesItem> items) {
         List<SalesOrderItem> orderItems = items.stream()
                 .map(item -> new SalesOrderItem(null, salesOrderId, item.getProductId(), item.getQuantity(), item.getPrice()))
                 .toList();
         return salesOrderItemRepository.saveAll(orderItems);
     }
 
-    private Mono<Void> registerInventoryOutput(List<SalesItemRequest> items, UUID userId) {
+    private Mono<Void> registerInventoryMovements(List<ResolvedSalesItem> items, String movementType, UUID userId) {
         InventoryMovementBatchRequest batchRequest = new InventoryMovementBatchRequest(
                 items.stream()
-                        .map(item -> new InventoryMovementRequest(item.getProductId(), "EXIT", item.getQuantity()))
+                        .map(item -> new InventoryMovementRequest(item.getProductId(), movementType, item.getQuantity()))
                         .toList());
 
-        return inventoryMovementPort.registerOutputMovements(batchRequest, userId);
-    }
-
-    private Mono<SalesOrder> updateOrderStatus(SalesOrder salesOrder, String status) {
-        salesOrder.setStatus(status);
-        return salesOrderRepository.save(salesOrder);
+        return inventoryMovementPort.registerMovements(batchRequest, userId);
     }
 
     private Mono<SalesOrderResponse> buildResponse(SalesOrder order) {
@@ -122,7 +132,13 @@ public class SalesOrderService {
                         .toList()));
     }
 
-    private BigDecimal calculateSubtotal(SalesItemRequest item) {
+    private BigDecimal calculateSubtotal(ResolvedSalesItem item) {
         return item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+    }
+
+    private BigDecimal calculateTotal(List<ResolvedSalesItem> items) {
+        return items.stream()
+                .map(this::calculateSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

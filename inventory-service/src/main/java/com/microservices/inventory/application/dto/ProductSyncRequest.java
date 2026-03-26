@@ -1,26 +1,32 @@
-package com.microservices.inventory.domain;
+package com.microservices.inventory.application.dto;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Table;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Table("products")
-public class Product implements Persistable<UUID> {
-    @Id
+public class ProductSyncRequest {
+    @NotNull
     private UUID id;
+    @NotBlank
     private String sku;
+    @NotBlank
     private String name;
     private String description;
+    @NotNull
     private UUID categoryId;
+    @NotNull
+    @DecimalMin("0.0")
     private BigDecimal unitPrice;
+    @NotNull
+    @Min(0)
     private Integer reorderLevel;
+    @NotNull
     private Boolean active;
-    private Integer currentStock;
 
-    @Override
     public UUID getId() {
         return id;
     }
@@ -83,18 +89,5 @@ public class Product implements Persistable<UUID> {
 
     public void setActive(Boolean active) {
         this.active = active;
-    }
-
-    public Integer getCurrentStock() {
-        return currentStock;
-    }
-
-    public void setCurrentStock(Integer currentStock) {
-        this.currentStock = currentStock;
-    }
-
-    @Override
-    public boolean isNew() {
-        return id == null;
     }
 }

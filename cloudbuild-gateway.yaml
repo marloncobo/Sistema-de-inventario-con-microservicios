@@ -10,7 +10,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'sistema-de-inventario-con-microservicios'
+      - 'api-gateway'
       - '--image'
       - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/api-gateway:$COMMIT_SHA'
       - '--region'

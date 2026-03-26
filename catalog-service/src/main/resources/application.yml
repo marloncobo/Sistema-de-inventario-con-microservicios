@@ -13,3 +13,7 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
+
+clients:
+  inventory:
+    base-url: ${INVENTORY_SERVICE_URL:http://localhost:8083}

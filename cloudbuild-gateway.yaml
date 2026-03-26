@@ -10,7 +10,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'sistema-de-inventario-con-microservicios'
+      - 'api-gateway'
       - '--image'
       - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/api-gateway:$COMMIT_SHA'
       - '--region'
@@ -20,5 +20,3 @@ steps:
       - '--allow-unauthenticated'
       - '--set-env-vars'
       - 'AUTH_SERVICE_URL=$_AUTH_URL,CATALOG_SERVICE_URL=$_CATALOG_URL,INVENTORY_SERVICE_URL=$_INVENTORY_URL,SALES_SERVICE_URL=$_SALES_URL,JWT_SECRET=$_JWT_SECRET'
-options:
-  logging: CLOUD_LOGGING_ONLY

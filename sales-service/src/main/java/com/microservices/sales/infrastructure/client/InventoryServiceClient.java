@@ -20,7 +20,7 @@ public class InventoryServiceClient implements InventoryMovementPort {
     }
 
     @Override
-    public Mono<Void> registerOutputMovements(InventoryMovementBatchRequest request, UUID userId) {
+    public Mono<Void> registerMovements(InventoryMovementBatchRequest request, UUID userId) {
         return inventoryWebClient.post()
                 .uri("/api/inventory/movements/batch")
                 .header("X-User-Id", userId.toString())

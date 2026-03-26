@@ -1,14 +1,14 @@
 {
   "info": {
-    "_postman_id": "9bc22bb2-7ce7-49e6-8d79-cb6f4e41ef53",
-    "name": "Inventory System Role Tests",
-    "description": "Coleccion para probar autenticacion, autorizacion por rol y operaciones del sistema de inventario via api-gateway.",
+    "_postman_id": "4d452b6f-c778-4d4a-b42c-7cd29d4d8a31",
+    "name": "Inventory System E2E",
+    "description": "Coleccion para probar autenticacion, catalogo, inventario y ventas via api-gateway con el flujo actualizado.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8088"
     },
     {
       "key": "admin_token",
@@ -19,11 +19,15 @@
       "value": ""
     },
     {
-      "key": "user_id",
+      "key": "category_id",
       "value": ""
     },
     {
       "key": "product_id",
+      "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"
+    },
+    {
+      "key": "order_id",
       "value": ""
     },
     {
@@ -39,6 +43,45 @@
     {
       "name": "1. Auth",
       "item": [
+        {
+          "name": "Register USER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 409', function () {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{user_username}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
         {
           "name": "Login Admin",
           "event": [
@@ -81,7 +124,7 @@
           }
         },
         {
-          "name": "Login User",
+          "name": "Login USER",
           "event": [
             {
               "listen": "test",
@@ -124,21 +167,23 @@
       ]
     },
     {
-      "name": "2. Admin Flow",
+      "name": "2. Catalog Admin",
       "item": [
         {
-          "name": "Create USER",
+          "name": "Create Category",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status 200', function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status 200 or 409', function () {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
                   "});",
-                  "const jsonData = pm.response.json();",
-                  "pm.collectionVariables.set('user_id', jsonData.id);"
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('category_id', jsonData.id);",
+                  "}"
                 ]
               }
             }
@@ -163,25 +208,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{user_username}}\",\n  \"password\": \"{{user_password}}\",\n  \"role\": \"USER\"\n}"
+              "raw": "{\n  \"name\": \"Office\",\n  \"description\": \"Office supplies\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/register",
+              "raw": "{{baseUrl}}/api/catalog/categories",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "auth",
-                "register"
+                "api",
+                "catalog",
+                "categories"
               ]
             }
           }
-        }
-      ]
-    },
-    {
-      "name": "3. Shared Read Access",
-      "item": [
+        },
         {
           "name": "Get Categories",
           "request": {
@@ -190,7 +231,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{user_token}}",
+                  "value": "{{admin_token}}",
                   "type": "string"
                 }
               ]
@@ -198,31 +239,32 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/categories",
+              "raw": "{{baseUrl}}/api/catalog/categories",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "catalog",
                 "categories"
               ]
             }
           }
         },
         {
-          "name": "Get Products",
+          "name": "Create Product",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status 200', function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status 200 or 409', function () {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
                   "});",
-                  "const jsonData = pm.response.json();",
-                  "if (Array.isArray(jsonData) && jsonData.length > 0) {",
-                  "    pm.collectionVariables.set('product_id', jsonData[0].id);",
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('product_id', jsonData.id);",
                   "}"
                 ]
               }
@@ -234,7 +276,77 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{user_token}}",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SKU-CHA-010\",\n  \"name\": \"Office Chair\",\n  \"description\": \"Ergonomic chair\",\n  \"categoryId\": \"{{category_id}}\",\n  \"unitPrice\": 450.00,\n  \"reorderLevel\": 6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Catalog Products",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "products"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Inventory",
+      "item": [
+        {
+          "name": "Get Inventory Products",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
                   "type": "string"
                 }
               ]
@@ -253,39 +365,6 @@
             }
           }
         },
-        {
-          "name": "Get Movement Report",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{user_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/reports/movements",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "movements"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Admin Inventory",
-      "item": [
         {
           "name": "Register Inventory Entry",
           "request": {
@@ -324,7 +403,7 @@
           }
         },
         {
-          "name": "Register Inventory Exit",
+          "name": "Get Movement Report",
           "request": {
             "auth": {
               "type": "bearer",
@@ -336,25 +415,16 @@
                 }
               ]
             },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"type\": \"EXIT\",\n  \"quantity\": 5\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/inventory/movements",
+              "raw": "{{baseUrl}}/api/reports/movements",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "inventory",
+                "reports",
                 "movements"
               ]
             }
@@ -363,19 +433,21 @@
       ]
     },
     {
-      "name": "5. Role Validation",
+      "name": "4. Sales",
       "item": [
         {
-          "name": "USER cannot create users",
+          "name": "Create Sales Order as USER",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status 403', function () {",
-                  "    pm.response.to.have.status(403);",
-                  "});"
+                  "pm.test('Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('order_id', jsonData.id);"
                 ]
               }
             }
@@ -400,22 +472,56 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"bloqueado\",\n  \"password\": \"bloqueado123\",\n  \"role\": \"USER\"\n}"
+              "raw": "{\n  \"reference\": \"SO-9001\",\n  \"salesChannel\": \"STORE\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/register",
+              "raw": "{{baseUrl}}/api/sales/orders",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "auth",
-                "register"
+                "api",
+                "sales",
+                "orders"
               ]
             }
           }
         },
         {
-          "name": "USER cannot register inventory movement",
+          "name": "Get Sales Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sales",
+                "orders"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Role Checks",
+      "item": [
+        {
+          "name": "USER cannot move inventory",
           "event": [
             {
               "listen": "test",

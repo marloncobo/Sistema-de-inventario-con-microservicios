@@ -10,7 +10,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'inventory-service'
+      - 'servicio-inventario'
       - '--image'
       - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/inventory-service:$COMMIT_SHA'
       - '--region'

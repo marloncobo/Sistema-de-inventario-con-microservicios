@@ -10,7 +10,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'catalog-service'
+      - 'servicio-catalogo'
       - '--image'
       - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/catalog-service:$COMMIT_SHA'
       - '--region'

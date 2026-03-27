@@ -110,7 +110,6 @@ Protegidos:
 
 ```json
 {
-  "reference": "SO-9001",
   "salesChannel": "STORE",
   "items": [
     {
@@ -123,6 +122,7 @@ Protegidos:
 
 Notas del flujo:
 
+- La referencia de la orden se genera automaticamente en `sales-service`.
 - El precio unitario de la venta se toma desde `catalog-service`.
 - El total de la orden se calcula en `sales-service`.
 - Al crear categorias y productos en catalogo, tambien se sincronizan hacia `inventory-service`.

@@ -30,6 +30,7 @@ import java.util.UUID;
 public class SalesOrderService {
 
     private static final String ORDER_STATUS_CONFIRMED = "CONFIRMED";
+    private static final String REFERENCE_PREFIX = "SO-";
 
     private final SalesOrderRepository salesOrderRepository;
     private final SalesOrderItemRepository salesOrderItemRepository;
@@ -80,17 +81,26 @@ public class SalesOrderService {
     }
 
     private Mono<SalesOrderResponse> saveConfirmedOrder(SalesOrderRequest request, List<ResolvedSalesItem> items) {
-        SalesOrder salesOrder = new SalesOrder();
-        salesOrder.setReference(request.getReference());
-        salesOrder.setSalesChannel(request.getSalesChannel());
-        salesOrder.setStatus(ORDER_STATUS_CONFIRMED);
-        salesOrder.setTotalAmount(calculateTotal(items));
-        salesOrder.setCreatedAt(LocalDateTime.now());
+        return generateUniqueReference()
+                .flatMap(reference -> {
+                    SalesOrder salesOrder = new SalesOrder();
+                    salesOrder.setReference(reference);
+                    salesOrder.setSalesChannel(request.getSalesChannel());
+                    salesOrder.setStatus(ORDER_STATUS_CONFIRMED);
+                    salesOrder.setTotalAmount(calculateTotal(items));
+                    salesOrder.setCreatedAt(LocalDateTime.now());
 
-        return salesOrderRepository.save(salesOrder)
+                    return salesOrderRepository.save(salesOrder);
+                })
                 .flatMap(savedOrder -> saveItems(savedOrder.getId(), items)
                         .collectList()
                         .flatMap(savedItems -> toResponse(savedOrder, savedItems)));
+    }
+
+    private Mono<String> generateUniqueReference() {
+        String reference = REFERENCE_PREFIX + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return salesOrderRepository.existsByReference(reference)
+                .flatMap(exists -> exists ? generateUniqueReference() : Mono.just(reference));
     }
 
     private Flux<SalesOrderItem> saveItems(UUID salesOrderId, List<ResolvedSalesItem> items) {

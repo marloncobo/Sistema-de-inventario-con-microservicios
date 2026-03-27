@@ -472,7 +472,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reference\": \"SO-9001\",\n  \"salesChannel\": \"STORE\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ]\n}"
+              "raw": "{\n  \"salesChannel\": \"STORE\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/sales/orders",

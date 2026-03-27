@@ -57,7 +57,6 @@ class SalesOrderServiceTest {
         item.setQuantity(2);
 
         SalesOrderRequest request = new SalesOrderRequest();
-        request.setReference("SO-3001");
         request.setSalesChannel("STORE");
         request.setItems(List.of(item));
 
@@ -68,6 +67,7 @@ class SalesOrderServiceTest {
 
         when(catalogProductPort.getProductById(productId)).thenReturn(Mono.just(product));
         when(inventoryMovementPort.registerMovements(any(), any())).thenReturn(Mono.empty());
+        when(salesOrderRepository.existsByReference(any())).thenReturn(Mono.just(false));
         when(salesOrderRepository.save(any(SalesOrder.class))).thenAnswer(invocation -> {
             SalesOrder order = invocation.getArgument(0);
             order.setId(UUID.randomUUID());
@@ -90,6 +90,7 @@ class SalesOrderServiceTest {
         verify(inventoryMovementPort).registerMovements(any(), org.mockito.ArgumentMatchers.eq(userId));
         org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("6400.00"),
                 orderCaptor.getValue().getTotalAmount());
+        org.junit.jupiter.api.Assertions.assertTrue(orderCaptor.getValue().getReference().startsWith("SO-"));
     }
 
     private void assertOrderResponse(SalesOrderResponse response, UUID productId) {

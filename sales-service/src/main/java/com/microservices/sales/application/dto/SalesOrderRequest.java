@@ -8,19 +8,9 @@ import java.util.List;
 
 public class SalesOrderRequest {
     @NotBlank
-    private String reference;
-    @NotBlank
     private String salesChannel;
     @NotEmpty
     private List<@NotNull @Valid SalesItemRequest> items;
-
-    public String getReference() {
-        return reference;
-    }
-
-    public void setReference(String reference) {
-        this.reference = reference;
-    }
 
     public String getSalesChannel() {
         return salesChannel;
